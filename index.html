@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AlertaVecinal: red de seguridad vecinal con alertas en tiempo real.">
+  <title>AlertaVecinal</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <!-- PWA: manifiesto, color del tema e ícono para iOS -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1d3557">
+  <link rel="apple-touch-icon" href="iconos/icon-192.png">
+  <link rel="icon" type="image/png" href="iconos/icon-192.png">
+</head>
+<body data-pagina="inicio">
+  <header class="barra">
+    <a class="marca" href="./">
+      <span class="marca-logo" aria-hidden="true">AV</span>
+      <span>AlertaVecinal</span>
+    </a>
+    <nav aria-label="Menú principal">
+      <ul id="menu" class="menu">
+        <li><a href="./">Inicio</a></li>
+        <li><a href="demo-cache.html">Demo caché</a></li>
+      </ul>
+    </nav>
+    <div class="barra-acciones" id="barra-acciones">
+      <span id="estado-red" class="chip" hidden></span>
+      <span id="usuario-nombre" class="usuario" hidden></span>
+      <button id="btn-salir" class="btn btn-claro btn-chico" type="button" hidden>Salir</button>
+    </div>
+  </header>
+
+  <div id="aviso-config" class="banda banda-aviso" hidden>
+    Falta configurar Firebase en <code>js/firebase-config.js</code>.
+    Mientras tanto puedes ver la app con datos de ejemplo en
+    <a href="?demo=1">modo demostración</a>.
+  </div>
+  <div id="aviso-demo" class="banda banda-demo" hidden>
+    Modo demostración: los datos son de ejemplo y no se guardan en Firebase.
+    <a href="./">Salir del modo demo</a>
+  </div>
+
+  <main class="contenedor">
+    <!-- ===== Acceso: login y registro ===== -->
+    <section id="vista-acceso" class="vista" hidden>
+      <div class="acceso">
+        <div class="acceso-intro">
+          <h1>Tu colonia, más segura entre todos</h1>
+          <p>Avisa a tus vecinos en segundos cuando ocurra un robo, una emergencia médica o una fuga de gas.
+             Las alertas aparecen en tiempo real, en un mapa y como notificación.</p>
+        </div>
+        <div class="tarjeta">
+          <div class="pestanas" role="tablist">
+            <button type="button" class="pestana activa" data-pestana="login" role="tab">Iniciar sesión</button>
+            <button type="button" class="pestana" data-pestana="registro" role="tab">Registrarme</button>
+          </div>
+
+          <form id="form-login" class="formulario" data-panel="login">
+            <label>Correo electrónico
+              <input type="email" id="login-correo" autocomplete="email" required>
+            </label>
+            <label>Contraseña
+              <input type="password" id="login-clave" autocomplete="current-password" required minlength="6">
+            </label>
+            <button class="btn btn-primario" type="submit">Entrar</button>
+          </form>
+
+          <form id="form-registro" class="formulario" data-panel="registro" hidden>
+            <label>Nombre completo
+              <input type="text" id="reg-nombre" autocomplete="name" required maxlength="80">
+            </label>
+            <label>Correo electrónico
+              <input type="email" id="reg-correo" autocomplete="email" required>
+            </label>
+            <label>Contraseña (mínimo 6 caracteres)
+              <input type="password" id="reg-clave" autocomplete="new-password" required minlength="6">
+            </label>
+            <div class="fila-2">
+              <label>Calle
+                <input type="text" id="reg-calle" autocomplete="address-line1" required maxlength="80">
+              </label>
+              <label>Número
+                <input type="text" id="reg-numero" required maxlength="10">
+              </label>
+            </div>
+            <button class="btn btn-primario" type="submit">Crear cuenta</button>
+            <p class="nota">Tu cuenta quedará <strong>pendiente</strong> hasta que un administrador la apruebe.</p>
+          </form>
+          <p id="acceso-mensaje" class="mensaje" role="alert" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Usuario pendiente o suspendido ===== -->
+    <section id="vista-espera" class="vista" hidden>
+      <div class="tarjeta tarjeta-centro">
+        <h2 id="espera-titulo">Cuenta pendiente</h2>
+        <p id="espera-texto">Un administrador debe aprobar tu cuenta antes de que puedas usar el panel.</p>
+        <button id="btn-salir-espera" class="btn btn-claro" type="button">Cerrar sesión</button>
+      </div>
+    </section>
+
+    <!-- ===== Panel del vecino aprobado ===== -->
+    <section id="vista-panel" class="vista" hidden>
+      <div id="panel-modulos" class="panel-grid">
+        <article class="tarjeta" id="tarjeta-enviar">
+          <h2>Enviar alerta</h2>
+          <form id="form-alerta" class="formulario">
+            <label>Tipo de alerta
+              <select id="alerta-tipo" required>
+                <option value="robo">Robo</option>
+                <option value="medica">Emergencia médica</option>
+                <option value="gas">Fuga de gas</option>
+                <option value="otro">Otro</option>
+              </select>
+            </label>
+            <label>Descripción
+              <textarea id="alerta-descripcion" rows="3" maxlength="500" required
+                placeholder="Ej. Dos personas forzando la puerta del número 12"></textarea>
+            </label>
+            <div class="ubicacion">
+              <button id="btn-ubicacion" class="btn btn-claro" type="button">Obtener mi ubicación</button>
+              <span id="alerta-ubicacion-texto" class="nota">Sin ubicación todavía</span>
+            </div>
+            <button id="btn-enviar-alerta" class="btn btn-alerta" type="submit">Enviar alerta</button>
+          </form>
+        </article>
+
+        <article class="tarjeta" id="tarjeta-lista">
+          <h2>Alertas en tiempo real <span id="contador-alertas" class="chip">0</span></h2>
+          <ul id="lista-alertas" class="lista-alertas">
+            <li class="vacio">Aún no hay alertas.</li>
+          </ul>
+        </article>
+        <!-- Los módulos (mapa, push, mapa de calor...) agregan aquí sus tarjetas -->
+      </div>
+    </section>
+
+    <p id="cargando" class="cargando">Cargando…</p>
+  </main>
+
+  <div id="avisos" class="avisos" aria-live="polite"></div>
+
+  <!-- Configuración de Firebase: script clásico, compartido con el service worker -->
+  <script src="js/firebase-config.js"></script>
+  <!--
+    Cargador de módulos: importa cada archivo por separado.
+    Si un módulo todavía no existe (por ejemplo, porque un integrante
+    aún no sube su parte), solo se avisa en la consola y la app sigue.
+  -->
+  <script type="module">
+    const MODULOS = ['auth', 'app', 'instalar', 'alertas', 'mapa', 'offline-sync',
+                     'push', 'heatmap', 'admin', 'estadisticas'];
+    for (const nombre of MODULOS) {
+      try {
+        await import(`./js/${nombre}.js`);
+      } catch (error) {
+        console.warn(`[AlertaVecinal] js/${nombre}.js no está disponible todavía.`, error.message);
+      }
+    }
+    document.getElementById('cargando')?.remove();
+  </script>
+</body>
+</html>

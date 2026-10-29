@@ -1,0 +1,22 @@
+# Clave privada de la cuenta de servicio: NUNCA se sube a GitHub
+serviceAccountKey.json
+scripts/serviceAccountKey.json
+*-firebase-adminsdk-*.json
+
+# Dependencias de Node
+node_modules/
+
+# Archivos de Firebase CLI
+.firebase/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Herramientas locales para probar la app y generar los PDF
+reportes/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/

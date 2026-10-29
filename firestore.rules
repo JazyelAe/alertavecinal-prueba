@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// Reglas de seguridad de AlertaVecinal.
+// Se publican con:  firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Funciones de ayuda ----------
+    function autenticado() {
+      return request.auth != null;
+    }
+    function miPerfil() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+    }
+    function tienePerfil() {
+      return autenticado() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+    function esAprobado() {
+      return tienePerfil() && miPerfil().estado == 'aprobado';
+    }
+    function esAdmin() {
+      return esAprobado() && miPerfil().rol == 'admin';
+    }
+
+    // ---------- Usuarios ----------
+    match /usuarios/{uid} {
+      // Cada quien lee su perfil; el admin lee todos.
+      allow read: if autenticado() && (request.auth.uid == uid || esAdmin());
+
+      // Registro: solo puedes crear TU perfil y siempre como vecino pendiente.
+      allow create: if autenticado() && request.auth.uid == uid
+                    && request.resource.data.rol == 'vecino'
+                    && request.resource.data.estado == 'pendiente';
+
+      // Cada usuario edita solo su propio perfil, sin tocar su rol ni su estado.
+      // El admin puede cambiar cualquier perfil (aprobar, suspender, cambiar rol).
+      allow update: if (autenticado() && request.auth.uid == uid
+                        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['rol', 'estado']))
+                    || esAdmin();
+
+      // Solo el admin elimina usuarios.
+      allow delete: if esAdmin();
+    }
+
+    // ---------- Alertas ----------
+    match /alertas/{alertaId} {
+      // Solo los vecinos aprobados ven las alertas.
+      allow read: if esAprobado();
+
+      // Solo los vecinos aprobados crean alertas, a su nombre y con datos válidos.
+      allow create: if esAprobado()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.tipo in ['robo', 'medica', 'gas', 'otro']
+                    && request.resource.data.descripcion is string
+                    && request.resource.data.descripcion.size() > 0
+                    && request.resource.data.descripcion.size() <= 500;
+
+      // Corregir o borrar alertas: solo el admin.
+      allow update, delete: if esAdmin();
+    }
+
+    // ---------- Tokens de notificaciones push ----------
+    match /tokens/{token} {
+      // Cada usuario registra el token de su propio navegador.
+      allow create, update: if autenticado() && request.resource.data.uid == request.auth.uid;
+      // Leer y borrar: el dueño del token o el admin.
+      // (scripts/enviar-push.js usa firebase-admin, que no pasa por estas reglas.)
+      allow read, delete: if autenticado() && (resource.data.uid == request.auth.uid || esAdmin());
+    }
+  }
+}

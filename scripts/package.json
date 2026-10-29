@@ -1,0 +1,13 @@
+{
+  "name": "alertavecinal-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Script para enviar notificaciones push de AlertaVecinal con firebase-admin (plan Spark, sin Cloud Functions)",
+  "main": "enviar-push.js",
+  "scripts": {
+    "push": "node enviar-push.js"
+  },
+  "dependencies": {
+    "firebase-admin": "12.7.0"
+  }
+}

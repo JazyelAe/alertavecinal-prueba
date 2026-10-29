@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo push · AlertaVecinal</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1d3557">
+  <link rel="icon" type="image/png" href="iconos/icon-192.png">
+</head>
+<body data-pagina="demo-push">
+  <header class="barra">
+    <a class="marca" href="./">
+      <span class="marca-logo" aria-hidden="true">AV</span>
+      <span>AlertaVecinal</span>
+    </a>
+    <nav aria-label="Menú principal">
+      <ul id="menu" class="menu">
+        <li><a href="./">Inicio</a></li>
+        <li id="menu-push"><a href="demo-push.html" class="activo">Demo push</a></li>
+      </ul>
+    </nav>
+    <div class="barra-acciones" id="barra-acciones">
+      <span id="estado-red" class="chip" hidden></span>
+      <span id="usuario-nombre" class="usuario" hidden></span>
+      <button id="btn-salir" class="btn btn-claro btn-chico" type="button" hidden>Salir</button>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <h1>Demostración de notificaciones push</h1>
+    <p class="nota">Esta página sirve para probar en clase cada paso: permiso, token FCM y notificaciones.</p>
+    <div class="demo-grid">
+      <section class="tarjeta">
+        <h2>1. Estado</h2>
+        <div class="dato"><strong>Permiso de notificaciones</strong><span data-estado-permiso class="chip"></span></div>
+        <div class="dato"><strong>Service worker</strong><span id="estado-sw">Comprobando…</span></div>
+        <div class="dato"><strong>Push API disponible</strong><span id="soporte-push">…</span></div>
+        <div class="botonera">
+          <button type="button" id="btn-permiso" class="btn btn-primario">Activar notificaciones</button>
+        </div>
+      </section>
+
+      <section class="tarjeta">
+        <h2>2. Token FCM de este navegador</h2>
+        <p id="push-token" class="token">…</p>
+        <div class="botonera">
+          <button type="button" id="btn-copiar-token" class="btn btn-claro" disabled>Copiar token</button>
+        </div>
+        <p class="nota">Pega este token en la consola de Firebase &gt; Messaging &gt; "Enviar mensaje de prueba".</p>
+      </section>
+
+      <section class="tarjeta">
+        <h2>3. Notificación local de prueba</h2>
+        <p class="nota">Usa <code>registration.showNotification()</code>: la muestra el service worker sin pasar por FCM.</p>
+        <div class="botonera">
+          <button type="button" id="btn-local" class="btn btn-alerta">Lanzar notificación local</button>
+        </div>
+      </section>
+
+      <section class="tarjeta">
+        <h2>4. Mensaje en primer plano</h2>
+        <p class="nota">Cuando la app está abierta, <code>onMessage</code> recibe el push y lo mostramos dentro de la página.
+           Este botón simula cómo se ve.</p>
+        <div class="botonera">
+          <button type="button" id="btn-pagina" class="btn btn-claro">Simular mensaje en la página</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="avisos" class="avisos" aria-live="polite"></div>
+  <script src="js/firebase-config.js"></script>
+  <script type="module">
+    for (const nombre of ['auth', 'app', 'instalar', 'push']) {
+      try { await import(`./js/${nombre}.js`); }
+      catch (error) { console.warn(`[AlertaVecinal] js/${nombre}.js no está disponible todavía.`, error.message); }
+    }
+  </script>
+</body>
+</html>

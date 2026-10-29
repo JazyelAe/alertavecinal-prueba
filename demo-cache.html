@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo API Cache · AlertaVecinal</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1d3557">
+  <link rel="icon" type="image/png" href="iconos/icon-192.png">
+</head>
+<body data-pagina="demo-cache">
+  <header class="barra">
+    <a class="marca" href="./">
+      <span class="marca-logo" aria-hidden="true">AV</span>
+      <span>AlertaVecinal</span>
+    </a>
+    <nav aria-label="Menú principal">
+      <ul id="menu" class="menu">
+        <li><a href="./">Inicio</a></li>
+        <li><a href="demo-cache.html" class="activo">Demo caché</a></li>
+      </ul>
+    </nav>
+    <div class="barra-acciones" id="barra-acciones">
+      <span id="estado-red" class="chip" hidden></span>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <h1>Demostración de la API Cache</h1>
+    <p class="nota">Cada botón ejecuta un método real de la API Cache en este navegador y muestra el resultado.
+      Las pruebas de <code>add</code>, <code>put</code> y <code>delete</code> usan una caché aparte
+      (<code>alertavecinal-demo</code>) para no romper la caché de la app.</p>
+
+    <div class="demo-grid">
+      <section class="tarjeta">
+        <h2>Service worker</h2>
+        <div class="dato"><strong>Estado</strong><span id="sw-estado">Comprobando…</span></div>
+        <div class="dato"><strong>Alcance (scope)</strong><span id="sw-alcance">—</span></div>
+        <div class="dato"><strong>Caché de la versión actual</strong><span id="sw-version">—</span></div>
+        <div class="dato"><strong>Conexión</strong><span id="sw-red">—</span></div>
+      </section>
+
+      <section class="tarjeta">
+        <h2>Métodos</h2>
+        <label class="formulario">
+          <span class="nota">Caché a consultar</span>
+          <select id="demo-cache-nombre"><option value="">(pulsa caches.keys() primero)</option></select>
+        </label>
+        <label class="formulario" style="margin-top:.6rem">
+          <span class="nota">URL para match / add / delete</span>
+          <input id="demo-url" value="offline.html">
+        </label>
+        <div class="botonera">
+          <button type="button" class="btn btn-primario btn-chico" data-metodo="cachesKeys">caches.keys()</button>
+          <button type="button" class="btn btn-primario btn-chico" data-metodo="cacheKeys">cache.keys()</button>
+          <button type="button" class="btn btn-primario btn-chico" data-metodo="cacheMatch">cache.match()</button>
+          <button type="button" class="btn btn-verde btn-chico" data-metodo="cacheAdd">cache.add()</button>
+          <button type="button" class="btn btn-verde btn-chico" data-metodo="cachePut">cache.put()</button>
+          <button type="button" class="btn btn-peligro btn-chico" data-metodo="cacheDelete">cache.delete()</button>
+          <button type="button" class="btn btn-claro btn-chico" data-metodo="cachesHas">caches.has()</button>
+          <button type="button" class="btn btn-alerta btn-chico" data-metodo="borrarTodo">Borrar toda la caché</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="tarjeta" style="margin-top:1rem">
+      <h2>Resultado</h2>
+      <pre id="demo-salida" class="salida">Pulsa un botón para ver el resultado aquí.</pre>
+    </section>
+  </main>
+
+  <div id="avisos" class="avisos" aria-live="polite"></div>
+  <script type="module">
+    for (const nombre of ['app', 'cache-demo']) {
+      try { await import(`./js/${nombre}.js`); }
+      catch (error) { console.warn(`[AlertaVecinal] js/${nombre}.js no está disponible todavía.`, error.message); }
+    }
+  </script>
+</body>
+</html>

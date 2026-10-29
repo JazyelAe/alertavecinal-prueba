@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sin conexión · AlertaVecinal</title>
+  <meta name="theme-color" content="#1d3557">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <!-- Página de respaldo: el service worker la entrega cuando no hay red
+       y la página pedida no está guardada en la caché. -->
+  <main class="offline">
+    <div class="tarjeta">
+      <svg class="offline-icono" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="#fde8ea"/>
+        <path d="M14 26a26 26 0 0 1 36 0M20 33a17 17 0 0 1 24 0M26 40a8 8 0 0 1 12 0" fill="none"
+              stroke="#e63946" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="32" cy="47" r="3.5" fill="#e63946"/>
+        <path d="M14 14l36 36" stroke="#1d3557" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <h1>Estás sin conexión</h1>
+      <p>Esta página no está guardada en tu teléfono. Las secciones que ya visitaste
+         siguen disponibles desde el inicio.</p>
+      <p class="nota">En una emergencia real llama al <strong>911</strong>.</p>
+      <div class="botonera" style="justify-content:center">
+        <a class="btn btn-primario" href="./">Ir al inicio</a>
+        <button class="btn btn-claro" type="button" onclick="location.reload()">Reintentar</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
