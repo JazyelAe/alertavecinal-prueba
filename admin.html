@@ -34,6 +34,21 @@
       <a class="btn btn-primario" href="./">Ir al inicio</a>
     </div>
 
+    <section id="admin-avisos" class="tarjeta" hidden style="margin-bottom:1rem">
+      <h2>Enviar aviso a todos los vecinos</h2>
+      <p class="nota">Los vecinos con la app abierta o en segundo plano reciben una notificación al instante.
+        Quien la tenga cerrada lo verá al abrirla.</p>
+      <form id="form-aviso" class="formulario">
+        <label>Título
+          <input type="text" id="aviso-titulo" required maxlength="80" placeholder="Ej. Corte de agua mañana">
+        </label>
+        <label>Mensaje
+          <textarea id="aviso-mensaje" rows="2" maxlength="300" placeholder="Ej. De 9:00 a 14:00 en toda la colonia."></textarea>
+        </label>
+        <button id="btn-enviar-aviso" class="btn btn-alerta" type="submit">Enviar aviso a todos</button>
+      </form>
+    </section>
+
     <section id="admin-contenido" class="tarjeta" hidden>
       <h2>Usuarios <span class="chip chip-espera"><span id="conteo-pendientes">0</span> pendientes</span></h2>
       <div class="botonera">

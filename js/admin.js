@@ -5,7 +5,7 @@
  * cambiar el rol y eliminar.
  */
 import {
-  collection, doc, onSnapshot, updateDoc, deleteDoc
+  collection, doc, onSnapshot, updateDoc, deleteDoc, addDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { db, esDemo, datosDemo, onSesion, aviso, agregarMenu } from './auth.js';
 
@@ -124,8 +124,35 @@ function escucharUsuarios() {
   });
 }
 
+/* ---------- Avisos a todos los vecinos ---------- */
+// Se guardan en la colección "avisos"; push.js de cada vecino los escucha
+// en tiempo real y muestra la notificación (no requiere servidor).
+async function enviarAviso(e) {
+  e.preventDefault();
+  const { usuario, perfil } = window.AV.sesion || {};
+  const titulo = $('aviso-titulo').value.trim();
+  const mensaje = $('aviso-mensaje').value.trim();
+  const boton = $('btn-enviar-aviso');
+  boton.disabled = true;
+  try {
+    if (!esDemo) {
+      await addDoc(collection(db, 'avisos'), {
+        titulo, mensaje, uid: usuario.uid, autor: perfil?.nombre || usuario.email, creado: serverTimestamp()
+      });
+    }
+    aviso(esDemo ? 'Modo demo: el aviso no se envía a nadie.' : 'Aviso enviado a todos los vecinos.', 'ok');
+    e.target.reset();
+  } catch (error) {
+    console.error(error);
+    aviso('No se pudo enviar el aviso. Revisa las reglas de Firestore.', 'error');
+  } finally {
+    boton.disabled = false;
+  }
+}
+
 /* ---------- Arranque ---------- */
 if (enPaginaAdmin) {
+  $('form-aviso')?.addEventListener('submit', enviarAviso);
   document.querySelectorAll('[data-filtro]').forEach((b) => b.addEventListener('click', () => {
     filtro = b.dataset.filtro;
     document.querySelectorAll('[data-filtro]').forEach((x) => x.classList.toggle('btn-primario', x === b));
@@ -142,6 +169,7 @@ onSesion(({ usuario, perfil }) => {
   if (!enPaginaAdmin) return;
   $('admin-sin-permiso').hidden = esAdmin;
   $('admin-contenido').hidden = !esAdmin;
+  if ($('admin-avisos')) $('admin-avisos').hidden = !esAdmin;
   if (esAdmin && !dejarDeEscuchar && !usuarios.length) escucharUsuarios();
   if (!esAdmin && dejarDeEscuchar) { dejarDeEscuchar(); dejarDeEscuchar = null; usuarios = []; }
 });

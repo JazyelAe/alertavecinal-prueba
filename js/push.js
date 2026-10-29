@@ -11,8 +11,10 @@
 import {
   getMessaging, getToken, onMessage, isSupported
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js';
-import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { app, db, esDemo, onSesion, aviso, agregarMenu } from './auth.js';
+import {
+  doc, setDoc, serverTimestamp, collection, query, orderBy, limit, onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { app, db, esDemo, onSesion, aviso, agregarMenu, aFecha } from './auth.js';
 
 const $ = (id) => document.getElementById(id);
 const enDemoPush = document.body.dataset.pagina === 'demo-push';
@@ -106,6 +108,67 @@ export async function notificacionLocal() {
   });
 }
 
+/* ---------- Avisos del admin y alertas nuevas (sin servidor) ----------
+ * Sin Cloud Functions no podemos mandar un push desde la app. En su lugar,
+ * cada vecino escucha Firestore en tiempo real y su propio service worker
+ * muestra la notificación. Funciona con la app abierta o en segundo plano;
+ * con la app cerrada se usa la consola de Firebase o scripts/enviar-push.js. */
+const CLAVE_VISTO = 'av-ultimo-aviso';
+let dejarDeEscucharAvisos = null;
+// alertas.js carga antes: si ya publicó la lista, la tomamos como punto de partida.
+let alertasConocidas = window.AV?.alertas?.length ? new Set(window.AV.alertas.map((a) => a.id)) : null;
+
+function leerVisto() { try { return Number(localStorage.getItem(CLAVE_VISTO)) || 0; } catch { return 0; } }
+function guardarVisto(ms) { try { localStorage.setItem(CLAVE_VISTO, String(ms)); } catch { /* sin almacenamiento */ } }
+
+// Si la página está a la vista, el aviso va dentro de ella; si no, como notificación del sistema.
+async function notificar(titulo, cuerpo, url, etiqueta) {
+  if (document.visibilityState === 'visible') return mostrarEnPagina(titulo, cuerpo, url);
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const registro = await registroSW().catch(() => null);
+  await registro?.showNotification(titulo, {
+    body: cuerpo, icon: 'iconos/icon-192.png', badge: 'iconos/badge-96.png',
+    tag: etiqueta, renotify: true, vibrate: [200, 100, 200], data: { url }
+  });
+}
+
+function escucharAvisos(miUid) {
+  if (dejarDeEscucharAvisos || esDemo || self.FIREBASE_SIN_CONFIGURAR) return;
+  const consulta = query(collection(db, 'avisos'), orderBy('creado', 'desc'), limit(10));
+  dejarDeEscucharAvisos = onSnapshot(consulta, (snap) => {
+    let visto = leerVisto();
+    const primeraVez = visto === 0; // en el primer uso no repetimos avisos viejos
+    const nuevos = snap.docs
+      .map((d) => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }))
+      .filter((a) => aFecha(a.creado).getTime() > visto)
+      .reverse();
+    for (const a of nuevos) {
+      const hora = aFecha(a.creado).getTime();
+      visto = Math.max(visto, hora);
+      // No avisamos al propio autor ni repetimos avisos de hace más de un día.
+      if (primeraVez || a.uid === miUid || Date.now() - hora > 864e5) continue;
+      notificar(`Aviso: ${a.titulo}`, a.mensaje || `Enviado por ${a.autor}`, './', `aviso-${a.id}`);
+    }
+    guardarVisto(visto || Date.now());
+  }, (error) => console.warn('[Avisos]', error.message));
+}
+
+// Alertas nuevas de otros vecinos (las publica alertas.js con el evento "av:alertas").
+document.addEventListener('av:alertas', (e) => {
+  const lista = e.detail;
+  if (!lista.length) { alertasConocidas = null; return; }
+  if (!alertasConocidas) { alertasConocidas = new Set(lista.map((a) => a.id)); return; }
+  const miUid = window.AV.sesion?.usuario?.uid;
+  for (const a of lista) {
+    if (alertasConocidas.has(a.id)) continue;
+    alertasConocidas.add(a.id);
+    if (a.uid === miUid) continue;
+    const tipo = window.AV.TIPOS?.[a.tipo]?.nombre || 'Alerta';
+    notificar(`${tipo} · AlertaVecinal`, `${a.descripcion}${a.direccion ? ' · ' + a.direccion : ''}`,
+      `./?alerta=${a.id}`, `alerta-${a.id}`);
+  }
+});
+
 /* ---------- Interfaz ---------- */
 const TEXTO_PERMISO = {
   granted: ['Concedido', 'chip-ok'],
@@ -185,8 +248,12 @@ window.AV.push = { activarNotificaciones, mostrarEnPagina, notificacionLocal };
 
 if (enDemoPush) conectarDemoPush();
 
-onSesion(async ({ perfil }) => {
-  if (perfil?.estado !== 'aprobado') return;
+onSesion(async ({ usuario, perfil }) => {
+  if (perfil?.estado !== 'aprobado') {
+    if (dejarDeEscucharAvisos) { dejarDeEscucharAvisos(); dejarDeEscucharAvisos = null; }
+    return;
+  }
+  escucharAvisos(usuario.uid);
   agregarMenu({ id: 'menu-push', texto: 'Demo push', href: 'demo-push.html' });
   crearTarjetaPanel();
   // Si ya había permiso, renovamos el token y activamos onMessage en silencio.

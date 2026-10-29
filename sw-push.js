@@ -21,7 +21,8 @@ self.addEventListener('notificationclick', (event) => {
   const fcm = datos.FCM_MSG || {};
   const destino = datos.url || fcm.data?.url || fcm.fcmOptions?.link ||
                   fcm.notification?.click_action || './';
-  const urlFinal = new URL(destino, self.location.origin).href;
+  // Relativa al alcance del SW: así funciona también en una subcarpeta (GitHub Pages).
+  const urlFinal = new URL(destino, self.registration.scope).href;
 
   // Evita que el manejador interno de Firebase abra otra pestaña.
   event.stopImmediatePropagation();
@@ -30,7 +31,7 @@ self.addEventListener('notificationclick', (event) => {
     // clients.matchAll(): todas las pestañas/ventanas de la app.
     const ventanas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const ventana of ventanas) {
-      if (new URL(ventana.url).origin === self.location.origin && 'focus' in ventana) {
+      if (ventana.url.startsWith(self.registration.scope) && 'focus' in ventana) {
         // Ya hay una ventana abierta: la llevamos a la alerta y la enfocamos.
         await ventana.navigate(urlFinal).catch(() => null);
         return ventana.focus();
