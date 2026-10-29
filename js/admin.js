@@ -135,12 +135,17 @@ async function enviarAviso(e) {
   const boton = $('btn-enviar-aviso');
   boton.disabled = true;
   try {
+    let resultado = null;
     if (!esDemo) {
-      await addDoc(collection(db, 'avisos'), {
+      const ref = await addDoc(collection(db, 'avisos'), {
         titulo, mensaje, uid: usuario.uid, autor: perfil?.nombre || usuario.email, creado: serverTimestamp()
       });
+      // Push real a los celulares aunque tengan la app cerrada (si push.js y el intermediario existen).
+      resultado = await window.AV.push?.enviarPushReal?.('aviso', ref.id);
     }
-    aviso(esDemo ? 'Modo demo: el aviso no se envía a nadie.' : 'Aviso enviado a todos los vecinos.', 'ok');
+    aviso(esDemo ? 'Modo demo: el aviso no se envía a nadie.'
+      : resultado?.ok ? `Aviso enviado. Push a ${resultado.enviadas} dispositivo(s).`
+      : 'Aviso enviado a los vecinos con la app abierta.', 'ok');
     e.target.reset();
   } catch (error) {
     console.error(error);

@@ -46,6 +46,11 @@ self.FIREBASE_CONFIG = {
 // Clave pública VAPID de "Certificados push web" (ver punto 4).
 self.FIREBASE_VAPID_KEY = 'BEFD_zaPqy1YzE3_q18I_C9ibz7r5GelYVdC5g7c-zNBklHPwSl_iSUGCHw-qFBG_7H1joUczpiAw4xI6TEfGdM';
 
+// URL del intermediario de push en Google Apps Script (scripts/apps-script/Codigo.gs).
+// Se obtiene en script.google.com > Implementar > Nueva implementación > Aplicación web
+// y termina en "/exec". Vacío = sin push real desde la app (solo con la app abierta).
+self.PUSH_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxqImyfceIM-ht2TR2ngo1n-JTcGhuAjIOG3j8KqFmgaBYN3jhw-ZUA6v9E1HUg2TF9/exec';
+
 // Versión del SDK de Firebase que se carga desde el CDN gstatic.
 // Si la cambias, cámbiala también en los import de js/*.js y en sw-push.js.
 self.FIREBASE_SDK_VERSION = '10.12.2';

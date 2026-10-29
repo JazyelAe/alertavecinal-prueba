@@ -62,6 +62,13 @@ async function enviarPendientesDesdeSW() {
       if (respuesta.ok || respuesta.status === 409) {
         await syncOperar('readwrite', (s) => s.delete(p.id));
         enviadas++;
+        // Push real a los demás vecinos, si hay intermediario configurado.
+        if (respuesta.ok && self.PUSH_ENDPOINT) {
+          await fetch(self.PUSH_ENDPOINT, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ idToken: p.idToken, tipo: 'alerta', id: p.id })
+          }).catch(() => null);
+        }
       }
       // 401/403 = token vencido o sin permiso: la página la reintentará con un token nuevo.
     } catch (error) {

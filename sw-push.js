@@ -63,7 +63,8 @@ messaging.onBackgroundMessage((payload) => {
     body: datos.cuerpo || 'Hay una nueva alerta en tu colonia.',
     icon: 'iconos/icon-192.png',
     badge: 'iconos/badge-96.png',
-    tag: datos.alertaId || 'alertavecinal',  // reemplaza notificaciones repetidas
+    // Misma etiqueta que la notificación local: si llegan las dos, se ve solo una.
+    tag: datos.tag || (datos.alertaId ? `alerta-${datos.alertaId}` : 'alertavecinal'),
     renotify: true,
     vibrate: [200, 100, 200],
     data: { url: datos.url || (datos.alertaId ? `./?alerta=${datos.alertaId}` : './') }

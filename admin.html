@@ -73,7 +73,7 @@
   <div id="avisos" class="avisos" aria-live="polite"></div>
   <script src="js/firebase-config.js"></script>
   <script type="module">
-    for (const nombre of ['auth', 'app', 'instalar', 'admin']) {
+    for (const nombre of ['auth', 'app', 'instalar', 'push', 'admin']) {
       try { await import(`./js/${nombre}.js`); }
       catch (error) { console.warn(`[AlertaVecinal] js/${nombre}.js no está disponible todavía.`, error.message); }
     }

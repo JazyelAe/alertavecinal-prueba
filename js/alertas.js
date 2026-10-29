@@ -31,6 +31,8 @@ export async function publicarAlerta(datos, id = doc(collection(db, 'alertas')).
     return notificarCambio();
   }
   await setDoc(doc(db, 'alertas', id), { ...datos, creado: serverTimestamp() });
+  // Si existe el módulo de push, avisa a los demás celulares (sin esperar la respuesta).
+  window.AV.push?.enviarPushReal?.('alerta', id);
 }
 window.AV.alertasApi = { publicarAlerta, TIPOS };
 

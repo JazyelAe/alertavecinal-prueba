@@ -14,7 +14,7 @@ import {
 import {
   doc, setDoc, serverTimestamp, collection, query, orderBy, limit, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { app, db, esDemo, onSesion, aviso, agregarMenu, aFecha } from './auth.js';
+import { app, auth, db, esDemo, onSesion, aviso, agregarMenu, aFecha } from './auth.js';
 
 const $ = (id) => document.getElementById(id);
 const enDemoPush = document.body.dataset.pagina === 'demo-push';
@@ -106,6 +106,29 @@ export async function notificacionLocal() {
     vibrate: [200, 100, 200],
     data: { url: './' }
   });
+}
+
+/* ---------- Push real a todos los dispositivos (Google Apps Script) ----------
+ * Pide al intermediario (scripts/apps-script/Codigo.gs) que envíe un push por FCM
+ * para un aviso o una alerta recién creados. Solo mandamos el token de sesión y el
+ * id: el script comprueba permisos y lee el texto desde Firestore.
+ * Si PUSH_ENDPOINT está vacío, no hace nada (quedan las notificaciones de abajo). */
+export async function enviarPushReal(tipo, id) {
+  if (!self.PUSH_ENDPOINT || esDemo || !auth.currentUser) return null;
+  try {
+    const respuesta = await fetch(self.PUSH_ENDPOINT, {
+      method: 'POST',
+      // text/plain evita la verificación CORS previa, que Apps Script no admite.
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ idToken: await auth.currentUser.getIdToken(), tipo, id })
+    });
+    const resultado = await respuesta.json();
+    console.info('[Push real]', resultado);
+    return resultado;
+  } catch (error) {
+    console.warn('[Push real] No se pudo contactar al intermediario:', error.message);
+    return null;
+  }
 }
 
 /* ---------- Avisos del admin y alertas nuevas (sin servidor) ----------
@@ -244,7 +267,7 @@ function conectarDemoPush() {
 
 /* ---------- Arranque ---------- */
 window.AV = window.AV || {};
-window.AV.push = { activarNotificaciones, mostrarEnPagina, notificacionLocal };
+window.AV.push = { activarNotificaciones, mostrarEnPagina, notificacionLocal, enviarPushReal };
 
 if (enDemoPush) conectarDemoPush();
 
