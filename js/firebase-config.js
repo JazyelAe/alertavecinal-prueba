@@ -35,16 +35,16 @@
  * ============================================================
  */
 self.FIREBASE_CONFIG = {
-  apiKey: 'TU_API_KEY',
-  authDomain: 'TU_PROYECTO.firebaseapp.com',
-  projectId: 'TU_PROYECTO',
-  storageBucket: 'TU_PROYECTO.appspot.com',
-  messagingSenderId: '000000000000',
-  appId: '1:000000000000:web:0000000000000000000000'
+  apiKey: 'AIzaSyDnvwb3t6YDEEkExLOAbLgeNV8CAw_vJJY',
+  authDomain: 'alertavecinal-10d.firebaseapp.com',
+  projectId: 'alertavecinal-10d',
+  storageBucket: 'alertavecinal-10d.firebasestorage.app',
+  messagingSenderId: '111909253533',
+  appId: '1:111909253533:web:b5dec4992f624134547f74'
 };
 
 // Clave pública VAPID de "Certificados push web" (ver punto 4).
-self.FIREBASE_VAPID_KEY = 'TU_CLAVE_VAPID_PUBLICA';
+self.FIREBASE_VAPID_KEY = 'BEFD_zaPqy1YzE3_q18I_C9ibz7r5GelYVdC5g7c-zNBklHPwSl_iSUGCHw-qFBG_7H1joUczpiAw4xI6TEfGdM';
 
 // Versión del SDK de Firebase que se carga desde el CDN gstatic.
 // Si la cambias, cámbiala también en los import de js/*.js y en sw-push.js.
